@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图片的懒加载</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		h2 {
+			margin: 0;
+			padding-top: 15px;
+			font-weight: normal;
+		}
+		.clearfix::after {
+			content: "";
+			display: block;
+			clear: both;
+		}
+
+		.img-list {
+			width: 1040px;
+			margin: 0;
+			padding: 0;
+			margin: 50px auto;
+			list-style: none;
+		}
+		.img-list .img-item {
+			float: left;
+			width: 480px;
+			margin: 15px;
+		}
+		.img-item .img-wrap {
+			width: 100%;
+			height: 270px;
+		}
+		.img-item .img-wrap .list-img {
+			width: 100%;
+			height: 100%;
+		}
+
+	</style>
+</head>
+<body>
+	<div class="wrap .clearfix">
+		<ul class="img-list J_imgList">
+		</ul>
+	</div>
+	<div style="display: none;" id="J_data">
+		[{"img": "img/1.jpg", "name": "图片1"},
+		{"img": "img/2.jpg", "name": "图片2"},
+		{"img": "img/3.jpg", "name": "图片3"},
+		{"img": "img/4.jpg", "name": "图片4"},
+		{"img": "img/5.jpg", "name": "图片5"},
+		{"img": "img/6.jpg", "name": "图片6"},
+		{"img": "img/7.jpg", "name": "图片7"},
+		{"img": "img/8.jpg", "name": "图片8"},
+		{"img": "img/9.jpg", "name": "图片9"},
+		{"img": "img/10.jpg", "name": "图片10"},
+		{"img": "img/11.jpg", "name": "图片11"},
+		{"img": "img/12.jpg", "name": "图片12"},
+		{"img": "img/13.jpg", "name": "图片13"},
+		{"img": "img/14.jpg", "name": "图片14"},
+		{"img": "img/15.jpg", "name": "图片15"},
+		{"img": "img/16.jpg", "name": "图片16"},
+		{"img": "img/1.jpg", "name": "图片17"},
+		{"img": "img/2.jpg", "name": "图片18"},
+		{"img": "img/3.jpg", "name": "图片19"},
+		{"img": "img/4.jpg", "name": "图片20"},
+		{"img": "img/5.jpg", "name": "图片21"},
+		{"img": "img/6.jpg", "name": "图片22"},
+		{"img": "img/7.jpg", "name": "图片23"},
+		{"img": "img/8.jpg", "name": "图片24"},
+		{"img": "img/9.jpg", "name": "图片25"},
+		{"img": "img/10.jpg", "name": "图片26"},
+		{"img": "img/11.jpg", "name": "图片27"},
+		{"img": "img/12.jpg", "name": "图片28"},
+		{"img": "img/13.jpg", "name": "图片29"},
+		{"img": "img/14.jpg", "name": "图片30"},
+		{"img": "img/15.jpg", "name": "图片31"},
+		{"img": "img/16.jpg", "name": "图片32"}]
+	</div>
+	<script type="text/html" id="J_imgTpl">
+		<li class="img-item">
+			<div class="img-wrap">
+				<img src="img/d.jpg" class="list-img" data-src="{{img}}" alt="{{name}}" />
+			</div>
+			<div class="img-tt">
+				<h2>{{name}}</h1>
+			</div>
+		</li>
+	</script>
+	<script type="text/javascript">
+		;(function(win, doc) {
+			var oImgList = doc.getElementsByClassName('J_imgList')[0],
+				data = JSON.parse(doc.getElementById('J_data').innerHTML),
+				imgTpl = doc.getElementById('J_imgTpl').innerHTML,
+				oImg = doc.getElementsByClassName('list-img');
+
+			var init = function() {
+				oImgList.innerHTML = renderList(data);
+				bindEvent();
+				// 如果不做这个操作，每次刷新不会从头开始，而是从滚动条停留的位置开始加载，所以需要将滚动条置为初始位置，而且需要延时，不然不起作用
+				setTimeout(function() {
+					window.scrollTo(0, 0);
+				}, 150);
+			}
+
+			function bindEvent() {
+				// 这里需进行函数节流，因为scroll如果被频繁触发就会出现问题,throttle是封装的节流函数
+				window.onload = window.onscroll = throttle(imgLazyLoad(oImg), 100);
+			}
+
+			function renderList(data) {
+				var list = '';
+
+				data.forEach(function(elem){
+					list += imgTpl.replace(/{{(.*?)}}/g, function(node, key) {
+						return {
+							img: elem.img,
+							name: elem.name
+						}[key]
+					});
+				});
+
+				return list;
+			}
+
+			init();
+		})(window, document);
+
+		function imgLazyLoad(images) {
+			var imgLen = images.length,
+				n = 0;
+
+			return function() {
+				var cHeight = document.documentElement.clientHeight,
+					sTop = document.documentElement.scrollTop || document.body.scrollTop,
+					imgItem;
+
+				for (var i = n; i < imgLen; i++) {
+					imgItem = images[i];
+
+					if(imgItem.offsetTop < cHeight + sTop){
+						imgItem.src = imgItem.getAttribute('data-src');
+						imgItem.removeAttribute('data-src');
+						n++;
+					}
+				}
+
+			}
+		}
+
+		// 函数节流
+		function throttle(fn, delay) {
+			var t = null,
+				begin = new Date().getTime();
+
+			return function() {
+				console.log(this)
+				var _self = this,
+					args = arguments,
+					cur = new Date().getTime();
+
+				clearTimeout(t);
+
+				if(cur - begin >= delay) {
+					fn.apply(_self, args);
+					begin = cur;
+				}else {
+					t = setTimeout(function() {
+						fn.apply(_self, args);
+					}, delay);
+				}
+			}
+		}
+	</script>
+</body>
+</html>
